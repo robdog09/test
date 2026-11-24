@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dugout - Team Manager</title>
+<style>
+:root{
+  --navy:#14263d; --navy-2:#1d3556; --clay:#b8532c; --clay-dark:#964320;
+  --grass:#2e6b3c; --grass-bg:#e4efe1; --cream:#f6f2ea; --card:#fffdf9;
+  --ink:#1c2430; --muted:#6a7482; --line:#e2dccf; --danger:#b3261e; --danger-bg:#fbe9e7;
+  --radius:12px; --shadow:0 1px 2px rgba(20,38,61,.06),0 4px 14px rgba(20,38,61,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--cream);color:var(--ink)}
+h1{font-size:1.7rem;margin:0 0 4px;line-height:1.2}
+h2{font-size:1.1rem;margin:0 0 10px}
+h3{font-size:1.05rem;margin:0}
+p{margin:0 0 6px}
+a{color:var(--clay-dark)}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+
+/* header */
+header.top{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20}
+.top-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.brand{font-weight:800;font-size:1.25rem;letter-spacing:.3px;display:flex;gap:8px;align-items:center;text-decoration:none;color:#fff}
+.brand i{display:inline-block;width:22px;height:22px;border-radius:50%;background:#fff;position:relative;box-shadow:inset 0 0 0 2px #fff}
+.brand i::before,.brand i::after{content:"";position:absolute;top:3px;bottom:3px;width:6px;border:2px solid var(--clay);border-radius:50%}
+.brand i::before{left:-3px;border-left-color:transparent;border-top-color:transparent;border-bottom-color:transparent}
+.brand i::after{right:-3px;border-right-color:transparent;border-top-color:transparent;border-bottom-color:transparent}
+.ctx{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.ctx label{display:flex;align-items:center;gap:6px;font-size:.8rem;color:#b9c6da}
+.ctx select{background:var(--navy-2);color:#fff;border:1px solid #38527a;border-radius:8px;padding:6px 8px;font:inherit;font-size:.9rem;max-width:170px}
+nav.main{background:var(--navy-2)}
+.nav-in{max-width:1100px;margin:0 auto;padding:0 8px;display:flex;overflow-x:auto}
+nav.main a{color:#cdd8e8;text-decoration:none;padding:10px 14px;white-space:nowrap;border-bottom:3px solid transparent;font-weight:600;font-size:.95rem}
+nav.main a.active{color:#fff;border-bottom-color:var(--clay)}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 70px}
+
+/* building blocks */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+.card.error{border-color:var(--danger);background:var(--danger-bg);color:var(--danger)}
+.empty{text-align:center;padding:36px 16px}
+.page-head{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.cols{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.cols .card{margin-bottom:0}
+.btn{display:inline-block;border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 16px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;line-height:1.2}
+.btn:hover{border-color:#c9c0ae}
+.btn.primary{background:var(--clay);border-color:var(--clay);color:#fff}
+.btn.primary:hover{background:var(--clay-dark)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;font-size:.85rem}
+.btn.danger-o{color:var(--danger)}
+.btn:disabled{opacity:.55;cursor:default}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:99px;background:#eee8da;color:#5b5444;vertical-align:middle}
+.badge.W{background:var(--grass-bg);color:var(--grass)}
+.badge.L{background:var(--danger-bg);color:var(--danger)}
+.badge.T{background:#eee8da}
+.badge.now{background:var(--navy);color:#fff}
+
+/* home tiles */
+.tiles{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px}
+.tile{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.tile:hover{border-color:var(--clay)}
+.tile b{display:block;font-size:1.05rem}
+.tile span{font-size:.85rem;color:var(--muted)}
+.tile.big{background:var(--grass);border-color:var(--grass);color:#fff}
+.tile.big span{color:#d3e6d0}
+.tile.big b{font-size:1.25rem}
+.tiles.big{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.section-label{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 8px;font-weight:700}
+
+/* games */
+.game{display:flex;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.game:first-child{border-top:0}
+.game .date{flex:0 0 54px;text-align:center;background:var(--navy);color:#fff;border-radius:10px;padding:6px 0;line-height:1.1}
+.game .date b{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#b9c6da}
+.game .date span{font-size:1.4rem;font-weight:800}
+.game .info{flex:1;min-width:0}
+.game .info p{font-size:.92rem;color:var(--muted)}
+.game .act{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:620px){.game{flex-wrap:wrap}.game .act{flex:1 0 100%;justify-content:flex-start}}
+
+/* tables */
+.table-wrap{overflow-x:auto}
+table.list{width:100%;border-collapse:collapse}
+table.list th{text-align:left;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
+table.list td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.list td.num{font-weight:800;width:56px;color:var(--navy)}
+table.list td.act{text-align:right;white-space:nowrap}
+
+/* updates */
+.update{padding:10px 0;border-top:1px solid var(--line)}
+.update:first-of-type{border-top:0}
+.update h3{display:flex;justify-content:space-between;gap:8px}
+.update small{color:var(--muted)}
+.update p{white-space:pre-wrap}
+
+/* role picker */
+.roles{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-top:18px}
+.role-card{text-align:left;background:var(--card);border:2px solid var(--line);border-radius:var(--radius);padding:18px;cursor:pointer;font:inherit;color:var(--ink);box-shadow:var(--shadow)}
+.role-card:hover{border-color:var(--clay)}
+.role-card b{display:block;font-size:1.15rem;margin-bottom:4px}
+.role-card span{color:var(--muted);font-size:.92rem}
+
+/* dialog */
+dialog.modal{border:0;border-radius:14px;padding:0;width:min(520px,calc(100vw - 24px));box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog.modal::backdrop{background:rgba(20,38,61,.55)}
+dialog form{padding:20px}
+.fields{display:flex;flex-wrap:wrap;gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;flex:1 0 100%;font-size:.9rem;font-weight:600}
+.field.half{flex:1 0 calc(50% - 6px)}
+.field input,.field select,.field textarea{font:inherit;font-weight:400;padding:9px 10px;border:1px solid #cfc7b6;border-radius:8px;background:#fff;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus,.btn:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+.err{background:var(--danger-bg);color:var(--danger);padding:8px 10px;border-radius:8px;margin:12px 0 0;font-size:.9rem}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+
+/* lineup */
+.grid-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow)}
+table.lineup{border-collapse:collapse;min-width:900px;width:100%}
+table.lineup th,table.lineup td{padding:6px;border-bottom:1px solid var(--line);text-align:left;font-size:.9rem}
+table.lineup thead th{background:var(--navy);color:#fff;text-align:center;white-space:nowrap;font-size:.85rem}
+table.lineup thead th:first-child,table.lineup tbody th{position:sticky;left:0;z-index:2;text-align:left;min-width:110px}
+table.lineup tbody th{background:#f3efe4;font-size:.95rem}
+table.lineup tbody th small{display:block;font-weight:400;color:var(--muted);font-size:.72rem}
+table.lineup select{width:100%;min-width:118px;padding:6px 4px;font:inherit;font-size:.88rem;border:1px solid #cfc7b6;border-radius:6px;background:#fff}
+table.lineup td.ro{font-weight:600;text-align:center}
+table.lineup tr.bench td{font-size:.8rem;color:var(--muted);vertical-align:top;background:#faf7f0}
+table.lineup tr.count td{text-align:center;font-weight:700}
+.count .ok{color:var(--grass)} .count .bad{color:var(--danger)}
+.copy-btn{display:block;margin:4px auto 0;background:transparent;color:#cdd8e8;border:1px solid #4c6890;border-radius:6px;font-size:.7rem;padding:2px 6px;cursor:pointer}
+.copy-btn:hover{background:var(--navy-2)}
+ol.order{list-style:none;margin:0;padding:0}
+ol.order li{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+ol.order li:first-child{border-top:0}
+ol.order .slot{flex:0 0 30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;display:grid;place-items:center;font-size:.9rem}
+ol.order .who{flex:1;font-weight:600}
+ol.order .mv{display:flex;gap:4px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.inning-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.inning-tabs small{font-weight:400;opacity:.8;margin-left:2px}
+.savebar{position:sticky;bottom:0;background:rgba(246,242,234,.96);padding:12px 0;display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);margin-top:16px}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.3);z-index:100;max-width:90vw}
+#toast.bad{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#/home"><i></i> Dugout</a>
+    <div class="ctx" id="ctx"></div>
+  </div>
+  <nav class="main hidden" id="nav"><div class="nav-in" id="navin"></div></nav>
+</header>
+
+<main id="view"></main>
+<div id="toast" class="hidden" role="status"></div>
+
+<script>
+'use strict';
+
+/* ------------------------------------------------------------------ constants */
+const POSITIONS = [
+  ['P','Pitcher'],['C','Catcher'],['1B','First base'],['2B','Second base'],['3B','Third base'],
+  ['SS','Shortstop'],['LF','Left field'],['CF','Center field'],['RF','Right field']
+];
+const INNINGS = 7;
+const ROLES = {
+  admin:  {label:'Admin',  blurb:'Manage everything: seasons, teams, players, schedule, lineups and locations.'},
+  coach:  {label:'Coach',  blurb:'Run the team: seasons, teams, players, schedule and game lineups.'},
+  parent: {label:'Parent', blurb:'Read team updates, the schedule and lineups.'},
+  family: {label:'Family', blurb:'Follow along: updates, schedule and lineups.'}
+};
+const NAV = {
+  admin:  [['home','Home'],['players','Players'],['schedule','Schedule'],['seasons','Seasons'],['teams','Teams'],['locations','Locations']],
+  coach:  [['home','Home'],['players','Players'],['schedule','Schedule'],['seasons','Seasons'],['teams','Teams']],
+  parent: [['home','Home'],['schedule','Schedule'],['players','Roster']],
+  family: [['home','Home'],['schedule','Schedule'],['players','Roster']]
+};
+const ACCESS = {seasons:['admin','coach'], teams:['admin','coach'], locations:['admin']};
+
+/* ---------------------------------------------------------------------- state */
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k,String(v)); }catch(e){} }
+};
+const state = {
+  role: store.get('dugout.role'),
+  seasons: [], teams: [],
+  seasonId: Number(store.get('dugout.season')) || null,
+  teamId: Number(store.get('dugout.team')) || null
+};
+const isStaff = () => state.role === 'admin' || state.role === 'coach';
+const isAdmin = () => state.role === 'admin';
+const currentSeason = () => state.seasons.find(s => s.id === state.seasonId) || null;
+const currentTeam = () => state.teams.find(t => t.id === state.teamId) || null;
+function persist(){ store.set('dugout.role',state.role); store.set('dugout.season',state.seasonId); store.set('dugout.team',state.teamId); }
+
+/* -------------------------------------------------------------------- helpers */
+const $ = (sel, root=document) => root.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const parseDT = s => new Date(String(s).replace(' ','T'));
+const fmtDay  = s => parseDT(s).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+const fmtTime = s => parseDT(s).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+const fmtDate = s => s ? new Date(s+'T00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '';
+const short = p => `${p.first_name} ${p.last_name.charAt(0)}.`;
+const label = p => (p.jersey_number != null ? `#${p.jersey_number} ` : '') + short(p);
+const GRACE = 3 * 3600e3;            // a game stays "upcoming" for 3 hours after first pitch
+const isUpcoming = g => parseDT(g.game_datetime).getTime() >= Date.now() - GRACE;
+
+let toastTimer;
+function toast(msg, bad=false){
+  const t = $('#toast'); t.textContent = msg; t.className = bad ? 'bad' : '';
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 3200);
+}
+
+async function api(method, params, body){
+  const res = await fetch('api.php?' + new URLSearchParams(params), {
+    method,
+    headers: {'Content-Type':'application/json','X-Role': state.role || ''},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  let data = null;
+  try { data = await res.json(); } catch(e) { /* not JSON */ }
+  if (!res.ok) throw new Error((data && data.error) || `Request failed (${res.status}). Is api.php running with PHP and MySQL?`);
+  return data;
+}
+
+/* A modal form. onSubmit may throw; the message is shown inside the dialog. */
+function openForm({title, fields, values={}, submit='Save', onSubmit}){
+  const dlg = document.createElement('dialog');
+  dlg.className = 'modal';
+  const inputs = fields.map(fd => {
+    const v = values[fd.name] ?? '';
+    const req = fd.required ? ' required' : '';
+    let input;
+    if (fd.type === 'select') {
+      input = `<select name="${fd.name}"${req}>` + fd.options.map(o =>
+        `<option value="${esc(o.value)}"${String(o.value)===String(v)?' selected':''}>${esc(o.label)}</option>`).join('') + '</select>';
+    } else if (fd.type === 'textarea') {
+      input = `<textarea name="${fd.name}" rows="4"${req}>${esc(v)}</textarea>`;
+    } else {
+      input = `<input type="${fd.type||'text'}" name="${fd.name}" value="${esc(v)}"${req}${fd.attrs||''}>`;
+    }
+    return `<label class="field${fd.half?' half':''}"><span>${esc(fd.label)}${fd.required?' *':''}</span>${input}</label>`;
+  }).join('');
+  dlg.innerHTML = `<form><h2>${esc(title)}</h2><div class="fields">${inputs}</div>
+    <p class="err" hidden></p>
+    <div class="actions"><button type="button" class="btn ghost" data-cancel>Cancel</button>
+    <button class="btn primary">${esc(submit)}</button></div></form>`;
+  document.body.appendChild(dlg);
+  const form = $('form', dlg), err = $('.err', dlg), btn = $('.btn.primary', dlg);
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    btn.disabled = true; err.hidden = true;
+    try { await onSubmit(Object.fromEntries(new FormData(form))); dlg.close(); }
+    catch(ex){ err.textContent = ex.message; err.hidden = false; }
+    finally { btn.disabled = false; }
+  });
+  $('[data-cancel]', dlg).onclick = () => dlg.close();
+  dlg.addEventListener('close', () => dlg.remove());
+  dlg.showModal();
+  const first = $('input,select,textarea', dlg); if (first) first.focus();
+}
+
+/* ----------------------------------------------------------- context & chrome */
+function pickDefaultSeason(){
+  const today = new Date().toISOString().slice(0,10);
+  return state.seasons.find(s => s.start_date && s.end_date && s.start_date <= today && today <= s.end_date) || state.seasons[0] || null;
+}
+async function loadSeasons(){
+  state.seasons = await api('GET', {r:'seasons'});
+  if (!state.seasons.some(s => s.id === state.seasonId)) state.seasonId = (pickDefaultSeason() || {}).id ?? null;
+  await loadTeams();
+}
+async function loadTeams(){
+  state.teams = state.seasonId ? await api('GET', {r:'teams', season_id: state.seasonId}) : [];
+  if (!state.teams.some(t => t.id === state.teamId)) state.teamId = (state.teams[0] || {}).id ?? null;
+  persist();
+}
+async function reloadAll(){ await loadSeasons(); renderChrome(); route(); }
+
+function renderChrome(){
+  const ctx = $('#ctx');
+  if (!state.role) { ctx.innerHTML = ''; $('#nav').classList.add('hidden'); return; }
+  const roleSel = `<label>Role <select id="roleSel">${Object.entries(ROLES).map(([k,r]) =>
+    `<option value="${k}"${k===state.role?' selected':''}>${r.label}</option>`).join('')}</select></label>`;
+  const seasonSel = state.seasons.length ? `<label>Season <select id="seasonSel">${state.seasons.map(s =>
+    `<option value="${s.id}"${s.id===state.seasonId?' selected':''}>${esc(s.name)}</option>`).join('')}</select></label>` : '';
+  const teamSel = state.teams.length ? `<label>Team <select id="teamSel">${state.teams.map(t =>
+    `<option value="${t.id}"${t.id===state.teamId?' selected':''}>${esc(t.name)}</option>`).join('')}</select></label>` : '';
+  ctx.innerHTML = seasonSel + teamSel + roleSel;
+
+  $('#roleSel').onchange = e => { state.role = e.target.value; persist(); renderChrome(); route(); };
+  const ss = $('#seasonSel'); if (ss) ss.onchange = async e => { state.seasonId = Number(e.target.value); await loadTeams(); renderChrome(); route(); };
+  const ts = $('#teamSel');   if (ts) ts.onchange = e => { state.teamId = Number(e.target.value); persist(); route(); };
+
+  const here = (location.hash.replace(/^#\/?/,'').split('/')[0]) || 'home';
+  $('#navin').innerHTML = NAV[state.role].map(([k,l]) =>
+    `<a href="#/${k}" data-nav="${k}" class="${k===here?'active':''}">${l}</a>`).join('');
+  $('#nav').classList.remove('hidden');
+}
+
+/* --------------------------------------------------------------------- router */
+const VIEWS = {home:viewHome, players:viewPlayers, schedule:viewSchedule, seasons:viewSeasons,
+               teams:viewTeams, locations:viewLocations, lineup:viewLineup};
+
+async function route(){
+  const v = $('#view');
+  if (!state.role) return showRolePicker();
+  const [name='home', arg] = location.hash.replace(/^#\/?/,'').split('/');
+  const view = VIEWS[name || 'home'];
+  if (!view || (ACCESS[name] && !ACCESS[name].includes(state.role))) { location.hash = '#/home'; return; }
+  document.querySelectorAll('#navin a').forEach(a => a.classList.toggle('active', a.dataset.nav === (name==='lineup'?'schedule':name)));
+  v.onclick = null;
+  v.innerHTML = '<p class="muted">Loading...</p>';
+  try { await view(arg); }
+  catch(ex){ v.innerHTML = `<div class="card error"><b>Something went wrong.</b><br>${esc(ex.message)}</div>`; }
+}
+
+function showRolePicker(){
+  const v = $('#view');
+  v.innerHTML = `<h1>Who's using Dugout?</h1>
+    <p class="muted">Pick a role to get started. You can switch any time from the top bar.</p>
+    <div class="roles">${Object.entries(ROLES).map(([k,r]) =>
+      `<button class="role-card" data-role="${k}"><b>${r.label}</b><span>${r.blurb}</span></button>`).join('')}</div>`;
+  v.onclick = async e => {
+    const b = e.target.closest('[data-role]'); if (!b) return;
+    state.role = b.dataset.role; persist();
+    v.onclick = null;
+    try { await loadSeasons(); } catch(ex) { toast(ex.message, true); }
+    renderChrome();
+    location.hash = '#/home';
+    route();
+  };
+}
+
+function needTeam(){
+  const v = $('#view');
+  v.innerHTML = `<div class="card empty"><h2>No team yet</h2>
+    <p class="muted">${isStaff() ? 'Create a season and a team to get started.' : 'Nothing has been set up yet. Check back soon.'}</p>
+    ${isStaff() ? '<a class="btn primary" href="#/teams">Set up a team</a>' : ''}</div>`;
+}
+
+/* ------------------------------------------------------------ shared pieces */
+function resultBadge(g){
+  if (g.our_score == null || g.opp_score == null) return '';
+  const r = g.our_score > g.opp_score ? 'W' : g.our_score < g.opp_score ? 'L' : 'T';
+  return `<span class="badge ${r}">${r} ${g.our_score}-${g.opp_score}</span>`;
+}
+function locLink(g){
+  if (!g.location_name) return '<span class="muted">Location to be decided</span>';
+  return g.location_map_url
+    ? `<a href="${esc(g.location_map_url)}" target="_blank" rel="noopener">&#128205; ${esc(g.location_name)}</a>`
+    : `&#128205; ${esc(g.location_name)}`;
+}
+function gameCard(g, manage){
+  const d = parseDT(g.game_datetime);
+  return `<article class="game">
+    <div class="date"><b>${d.toLocaleDateString(undefined,{month:'short'})}</b><span>${d.getDate()}</span></div>
+    <div class="info">
+      <h3>${g.home_away==='away'?'@':'vs'} ${esc(g.opponent)} ${resultBadge(g)}</h3>
+      <p>${fmtDay(g.game_datetime)} &middot; ${fmtTime(g.game_datetime)} &middot; ${g.home_away==='home'?'Home':'Away'}</p>
+      <p>${locLink(g)}${g.youtube_url ? ` &middot; <a href="${esc(g.youtube_url)}" target="_blank" rel="noopener">&#9654; Watch stream</a>` : ''}</p>
+      ${g.notes ? `<p>${esc(g.notes)}</p>` : ''}
+    </div>
+    <div class="act"><a class="btn sm" href="#/lineup/${g.id}">${isStaff() ? 'Lineup' : 'View lineup'}</a>
+    ${manage ? `<button class="btn sm" data-edit-game="${g.id}">Edit</button><button class="btn sm danger-o" data-del-game="${g.id}">Delete</button>` : ''}</div>
+  </article>`;
+}
+
+/* ------------------------------------------------------------------ forms */
+function seasonForm(s){
+  openForm({
+    title: s ? 'Edit season' : 'New season',
+    values: s || {},
+    fields: [
+      {name:'name', label:'Season name (e.g. Fall 2026)', required:true},
+      {name:'start_date', label:'Start date', type:'date', half:true},
+      {name:'end_date', label:'End date', type:'date', half:true}
+    ],
+    onSubmit: async d => {
+      const saved = s ? await api('PUT', {r:'seasons', id:s.id}, d) : await api('POST', {r:'seasons'}, d);
+      if (!s) state.seasonId = saved.id;
+      toast(s ? 'Season updated' : 'Season created');
+      await reloadAll();
+    }
+  });
+}
+/* A "team" in the UI is a team's entry in the selected season (team.id is the
+   team_seasons id). Teams themselves live across seasons. */
+async function teamForm(t){
+  if (!state.seasonId) return toast('Create a season first.', true);
+  if (t) {
+    return openForm({
+      title: 'Edit team',
+      values: t,
+      fields: [
+        {name:'name', label:'Team name' + (t.season_count > 1 ? ` (renames it in all ${t.season_count} seasons)` : ''), required:true},
+        {name:'age_group', label:'Age group (e.g. 10U)'}
+      ],
+      onSubmit: async d => { await api('PUT', {r:'teams', id:t.id}, d); toast('Team updated'); await reloadAll(); }
+    });
+  }
+  // Teams that are not already in this season can be added again.
+  const inSeason = new Set(state.teams.map(x => x.team_id));
+  const others = (await api('GET', {r:'all_teams'})).filter(x => !inSeason.has(x.id));
+  openForm({
+    title: `Add a team to ${currentSeason().name}`,
+    fields: [
+      {name:'team_id', label:'Team', type:'select', options:[
+        {value:'', label:'+ New team'},
+        ...others.map(x => ({value:x.id, label: x.name + (x.age_group ? ` (${x.age_group})` : '')}))]},
+      {name:'name', label:'New team name (only for a new team)'},
+      {name:'age_group', label:'Age group (e.g. 10U)'},
+      {name:'copy_roster', label:'Copy the roster from its most recent season?', type:'select', options:[
+        {value:'', label:'No, start with an empty roster'}, {value:'true', label:'Yes, copy the players'}]}
+    ],
+    onSubmit: async d => {
+      const saved = await api('POST', {r:'teams'}, {...d, season_id:state.seasonId});
+      state.teamId = saved.id;
+      toast('Team added to the season');
+      await reloadAll();
+    }
+  });
+}
+function playerForm(p){
+  openForm({
+    title: p ? 'Edit player' : 'Add player',
+    values: p || {},
+    fields: [
+      {name:'first_name', label:'First name', required:true, half:true},
+      {name:'last_name', label:'Last name', required:true, half:true},
+      {name:'jersey_number', label:'Jersey number', type:'number', attrs:' min="0" max="99"'},
+      {name:'email', label:'Email address', type:'email'},
+      {name:'parent_names', label:'Parent / guardian names'}
+    ],
+    onSubmit: async d => {
+      p ? await api('PUT', {r:'players', id:p.id}, {...d, team_season_id:p.team_season_id})
+        : await api('POST', {r:'players'}, {...d, team_season_id:state.teamId});
+      toast(p ? 'Player updated' : 'Player added');
+      route();
+    }
+  });
+}
+async function gameForm(g){
+  const locs = await api('GET', {r:'locations'});
+  openForm({
+    title: g ? 'Edit game' : 'Add game',
+    values: g ? {...g, game_datetime: g.game_datetime.replace(' ','T').slice(0,16)} : {home_away:'home'},
+    fields: [
+      {name:'opponent', label:'Opponent', required:true},
+      {name:'game_datetime', label:'Date & time', type:'datetime-local', required:true},
+      {name:'home_away', label:'Home or away', type:'select', required:true,
+        options:[{value:'home',label:'Home'},{value:'away',label:'Away'}]},
+      {name:'location_id', label:'Location', type:'select',
+        options:[{value:'', label: locs.length ? 'To be decided' : 'No locations set up yet (ask an admin)'}, ...locs.map(l => ({value:l.id,label:l.name}))]},
+      {name:'youtube_url', label:'YouTube stream link', type:'url'},
+      {name:'our_score', label:'Our score', type:'number', attrs:' min="0"', half:true},
+      {name:'opp_score', label:'Opponent score', type:'number', attrs:' min="0"', half:true},
+      {name:'notes', label:'Notes', type:'textarea'}
+    ],
+    onSubmit: async d => {
+      g ? await api('PUT', {r:'games', id:g.id}, {...d, team_season_id:g.team_season_id})
+        : await api('POST', {r:'games'}, {...d, team_season_id:state.teamId});
+      toast(g ? 'Game updated' : 'Game added');
+      route();
+    }
+  });
+}
+function locationForm(l){
+  openForm({
+    title: l ? 'Edit location' : 'New location',
+    values: l || {},
+    fields: [
+      {name:'name', label:'Name (e.g. Riverside Park - Field 2)', required:true},
+      {name:'address', label:'Address'},
+      {name:'map_url', label:'Google Maps link', type:'url'}
+    ],
+    onSubmit: async d => {
+      l ? await api('PUT', {r:'locations', id:l.id}, d) : await api('POST', {r:'locations'}, d);
+      toast(l ? 'Location updated' : 'Location added');
+      route();
+    }
+  });
+}
+function updateForm(){
+  openForm({
+    title: 'Post a team update',
+    fields: [
+      {name:'title', label:'Title', required:true},
+      {name:'body', label:'Message', type:'textarea', required:true}
+    ],
+    onSubmit: async d => { await api('POST', {r:'announcements'}, {...d, team_season_id:state.teamId}); toast('Update posted'); route(); }
+  });
+}
+async function remove(resource, id, message, then){
+  if (!confirm(message)) return;
+  try { await api('DELETE', {r:resource, id}); toast('Deleted'); await then(); }
+  catch(ex){ toast(ex.message, true); }
+}
+
+/* ------------------------------------------------------------------- Home */
+async function viewHome(){
+  const v = $('#view'), s = currentSeason(), t = currentTeam();
+
+  if (!s || !t) {
+    const msg = !s ? 'Start by creating your first season, for example "Fall 2026".'
+                   : `Add a team to ${esc(s.name)} to get going.`;
+    v.innerHTML = `<div class="card empty"><h1>Welcome to Dugout</h1>
+      <p class="muted">${isStaff() ? msg : 'Nothing has been set up yet. Check back soon.'}</p>
+      ${isStaff() ? `<button class="btn primary" data-act="${!s?'season':'team'}">${!s?'Create a season':'Add a team'}</button>` : ''}</div>`;
+    v.onclick = e => { const a = e.target.closest('[data-act]'); if (a) a.dataset.act === 'season' ? seasonForm() : teamForm(); };
+    return;
+  }
+
+  const [games, updates, players] = await Promise.all([
+    api('GET', {r:'games', team_season_id:t.id}),
+    api('GET', {r:'announcements', team_season_id:t.id}),
+    api('GET', {r:'players', team_season_id:t.id})
+  ]);
+  const upcoming = games.filter(isUpcoming), past = games.filter(g => !isUpcoming(g));
+  const next = upcoming[0], last = past[past.length - 1];
+  let w = 0, l = 0, tie = 0;
+  past.forEach(g => { if (g.our_score == null || g.opp_score == null) return;
+    g.our_score > g.opp_score ? w++ : g.our_score < g.opp_score ? l++ : tie++; });
+  const record = (w + l + tie) ? ` &middot; Record ${w}-${l}${tie ? '-' + tie : ''}` : '';
+
+  const tiles = isStaff() ? `
+    <div class="tiles big">
+      <a class="tile big" href="#/players"><b>Players</b><span>${players.length} on the roster</span></a>
+      <a class="tile big" href="#/schedule"><b>Schedule</b><span>${games.length} game${games.length===1?'':'s'} &middot; ${upcoming.length} upcoming</span></a>
+    </div>
+    <div class="tiles">
+      <a class="tile" href="#/seasons"><b>Seasons</b><span>${state.seasons.length} total</span></a>
+      <a class="tile" href="#/teams"><b>Teams</b><span>${state.teams.length} in ${esc(s.name)}</span></a>
+      ${isAdmin() ? '<a class="tile" href="#/locations"><b>Locations</b><span>Fields &amp; map links</span></a>' : ''}
+    </div>` : '';
+
+  v.innerHTML = `
+    <div class="page-head"><div><h1>${esc(t.name)}</h1>
+      <p class="muted">${esc(s.name)}${t.age_group ? ' &middot; ' + esc(t.age_group) : ''}${record}</p></div></div>
+    ${tiles}
+    <div class="cols">
+      <section class="card"><h2>Next game</h2>${next ? gameCard(next, false) : '<p class="muted">No upcoming games on the schedule.</p>'}</section>
+      <section class="card"><h2>Last result</h2>${last ? gameCard(last, false) : '<p class="muted">No games played yet.</p>'}</section>
+    </div>
+    <section class="card" style="margin-top:16px">
+      <div class="page-head" style="margin-bottom:6px"><h2 style="margin:0">Team updates</h2>
+        ${isStaff() ? '<button class="btn sm primary" data-act="post">Post update</button>' : ''}</div>
+      ${updates.length ? updates.slice(0,5).map(u => `<div class="update">
+        <h3><span>${esc(u.title)}</span>${isStaff() ? `<button class="btn sm danger-o" data-del-update="${u.id}">Delete</button>` : ''}</h3>
+        <small>${esc(parseDT(u.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'}))}</small>
+        <p>${esc(u.body)}</p></div>`).join('') : '<p class="muted">No updates yet.</p>'}
+    </section>`;
+
+  v.onclick = e => {
+    if (e.target.closest('[data-act=post]')) return updateForm();
+    const d = e.target.closest('[data-del-update]');
+    if (d) remove('announcements', d.dataset.delUpdate, 'Delete this update?', route);
+  };
+}
+
+/* ---------------------------------------------------------------- Players */
+async function viewPlayers(){
+  const v = $('#view'), t = currentTeam();
+  if (!t) return needTeam();
+  const players = await api('GET', {r:'players', team_season_id:t.id});
+  const staff = isStaff();
+  const bench = Math.max(0, players.length - 9);
+  const summary = players.length < 9
+    ? `${players.length} player${players.length===1?'':'s'}. You need at least 9 to field a team.`
+    : `${players.length} players: 9 take the field each inning${bench ? `, ${bench} on the bench` : ''}.`;
+
+  v.innerHTML = `
+    <div class="page-head"><div><h1>${staff ? 'Players' : 'Roster'}</h1>
+      <p class="muted">${esc(t.name)} &middot; ${summary}</p></div>
+      ${staff ? '<button class="btn primary" data-act="add">Add player</button>' : ''}</div>
+    <div class="card"><div class="table-wrap"><table class="list">
+      <thead><tr><th>#</th><th>Player</th>${staff ? '<th>Email</th><th>Parents / guardians</th><th></th>' : ''}</tr></thead>
+      <tbody>${players.length ? players.map(p => `<tr>
+        <td class="num">${p.jersey_number ?? ''}</td>
+        <td><b>${esc(p.first_name)} ${esc(p.last_name)}</b></td>
+        ${staff ? `<td>${p.email ? `<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>` : ''}</td><td>${esc(p.parent_names || '')}</td>
+        <td class="act"><button class="btn sm" data-edit="${p.id}">Edit</button> <button class="btn sm danger-o" data-del="${p.id}">Remove</button></td>` : ''}
+      </tr>`).join('') : `<tr><td colspan="5" class="muted">No players yet.</td></tr>`}</tbody>
+    </table></div></div>`;
+
+  v.onclick = e => {
+    if (e.target.closest('[data-act=add]')) return playerForm();
+    const ed = e.target.closest('[data-edit]');
+    if (ed) return playerForm(players.find(p => p.id == ed.dataset.edit));
+    const del = e.target.closest('[data-del]');
+    if (del) { const p = players.find(x => x.id == del.dataset.del);
+      remove('players', p.id, `Remove ${p.first_name} ${p.last_name}? They will also be removed from any lineups.`, route); }
+  };
+}
+
+/* --------------------------------------------------------------- Schedule */
+async function viewSchedule(){
+  const v = $('#view'), t = currentTeam();
+  if (!t) return needTeam();
+  const games = await api('GET', {r:'games', team_season_id:t.id});
+  const staff = isStaff();
+  const upcoming = games.filter(isUpcoming), past = games.filter(g => !isUpcoming(g)).reverse();
+
+  v.innerHTML = `
+    <div class="page-head"><div><h1>Schedule</h1><p class="muted">${esc(t.name)} &middot; ${esc(currentSeason().name)}</p></div>
+      ${staff ? '<button class="btn primary" data-act="add">Add game</button>' : ''}</div>
+    <div class="card"><h2>Upcoming</h2>${upcoming.length ? upcoming.map(g => gameCard(g, staff)).join('') : '<p class="muted">No upcoming games.</p>'}</div>
+    ${past.length ? `<div class="card"><h2>Results</h2>${past.map(g => gameCard(g, staff)).join('')}</div>` : ''}`;
+
+  v.onclick = e => {
+    if (e.target.closest('[data-act=add]')) return gameForm();
+    const ed = e.target.closest('[data-edit-game]');
+    if (ed) return gameForm(games.find(g => g.id == ed.dataset.editGame));
+    const del = e.target.closest('[data-del-game]');
+    if (del) { const g = games.find(x => x.id == del.dataset.delGame);
+      remove('games', g.id, `Delete the game vs ${g.opponent}? Its lineup is deleted too.`, route); }
+  };
+}
+
+/* ---------------------------------------------------------------- Seasons */
+async function viewSeasons(){
+  const v = $('#view');
+  v.innerHTML = `
+    <div class="page-head"><div><h1>Seasons</h1><p class="muted">The season you pick here (or in the top bar) controls which teams you see.</p></div>
+      <button class="btn primary" data-act="add">New season</button></div>
+    <div class="card"><div class="table-wrap"><table class="list">
+      <thead><tr><th>Season</th><th>Dates</th><th></th></tr></thead>
+      <tbody>${state.seasons.length ? state.seasons.map(s => `<tr>
+        <td><b>${esc(s.name)}</b> ${s.id===state.seasonId ? '<span class="badge now">Selected</span>' : ''}</td>
+        <td>${s.start_date ? fmtDate(s.start_date) : ''}${s.end_date ? ' - ' + fmtDate(s.end_date) : ''}</td>
+        <td class="act">${s.id!==state.seasonId ? `<button class="btn sm" data-pick="${s.id}">Select</button> ` : ''}
+          <button class="btn sm" data-edit="${s.id}">Edit</button>
+          <button class="btn sm danger-o" data-del="${s.id}">Delete</button></td></tr>`).join('')
+        : '<tr><td colspan="3" class="muted">No seasons yet.</td></tr>'}</tbody>
+    </table></div></div>`;
+
+  v.onclick = async e => {
+    if (e.target.closest('[data-act=add]')) return seasonForm();
+    const pick = e.target.closest('[data-pick]');
+    if (pick) { state.seasonId = Number(pick.dataset.pick); await loadTeams(); renderChrome(); return route(); }
+    const ed = e.target.closest('[data-edit]');
+    if (ed) return seasonForm(state.seasons.find(s => s.id == ed.dataset.edit));
+    const del = e.target.closest('[data-del]');
+    if (del) { const s = state.seasons.find(x => x.id == del.dataset.del);
+      remove('seasons', s.id, `Delete ${s.name}? Seasons that still have teams cannot be deleted.`, reloadAll); }
+  };
+}
+
+/* ------------------------------------------------------------------ Teams */
+async function viewTeams(){
+  const v = $('#view'), s = currentSeason();
+  if (!s) {
+    v.innerHTML = `<div class="card empty"><h2>Create a season first</h2><p class="muted">Teams are added to a season.</p>
+      <a class="btn primary" href="#/seasons">Go to Seasons</a></div>`;
+    return;
+  }
+  v.innerHTML = `
+    <div class="page-head"><div><h1>Teams</h1><p class="muted">${esc(s.name)}</p></div>
+      <button class="btn primary" data-act="add">Add team</button></div>
+    <div class="card"><div class="table-wrap"><table class="list">
+      <thead><tr><th>Team</th><th>Age group</th><th>Players</th><th>Seasons</th><th></th></tr></thead>
+      <tbody>${state.teams.length ? state.teams.map(t => `<tr>
+        <td><b>${esc(t.name)}</b> ${t.id===state.teamId ? '<span class="badge now">Selected</span>' : ''}</td>
+        <td>${esc(t.age_group || '')}</td><td>${t.player_count}</td>
+        <td>${t.season_count > 1 ? `${t.season_count} seasons` : 'This season only'}</td>
+        <td class="act">${t.id!==state.teamId ? `<button class="btn sm" data-pick="${t.id}">Select</button> ` : ''}
+          <button class="btn sm" data-edit="${t.id}">Edit</button>
+          <button class="btn sm danger-o" data-del="${t.id}">Remove</button></td></tr>`).join('')
+        : '<tr><td colspan="5" class="muted">No teams in this season yet.</td></tr>'}</tbody>
+    </table></div></div>`;
+
+  v.onclick = e => {
+    if (e.target.closest('[data-act=add]')) return teamForm();
+    const pick = e.target.closest('[data-pick]');
+    if (pick) { state.teamId = Number(pick.dataset.pick); persist(); renderChrome(); return route(); }
+    const ed = e.target.closest('[data-edit]');
+    if (ed) return teamForm(state.teams.find(t => t.id == ed.dataset.edit));
+    const del = e.target.closest('[data-del]');
+    if (del) { const t = state.teams.find(x => x.id == del.dataset.del);
+      remove('teams', t.id, `Remove ${t.name} from ${s.name}? Its roster, schedule and lineups for this season are deleted too.` +
+        (t.season_count > 1 ? ` The team stays in its ${t.season_count - 1} other season${t.season_count > 2 ? 's' : ''}.` : ' It is in no other season, so the team is deleted entirely.'), reloadAll); }
+  };
+}
+
+/* -------------------------------------------------------------- Locations */
+async function viewLocations(){
+  const v = $('#view');
+  const locs = await api('GET', {r:'locations'});
+  v.innerHTML = `
+    <div class="page-head"><div><h1>Locations</h1><p class="muted">Fields that can be chosen when scheduling a game.</p></div>
+      <button class="btn primary" data-act="add">New location</button></div>
+    <div class="card"><div class="table-wrap"><table class="list">
+      <thead><tr><th>Name</th><th>Address</th><th>Map</th><th></th></tr></thead>
+      <tbody>${locs.length ? locs.map(l => `<tr>
+        <td><b>${esc(l.name)}</b></td><td>${esc(l.address || '')}</td>
+        <td>${l.map_url ? `<a href="${esc(l.map_url)}" target="_blank" rel="noopener">Open map</a>` : ''}</td>
+        <td class="act"><button class="btn sm" data-edit="${l.id}">Edit</button>
+          <button class="btn sm danger-o" data-del="${l.id}">Delete</button></td></tr>`).join('')
+        : '<tr><td colspan="4" class="muted">No locations yet.</td></tr>'}</tbody>
+    </table></div></div>`;
+
+  v.onclick = e => {
+    if (e.target.closest('[data-act=add]')) return locationForm();
+    const ed = e.target.closest('[data-edit]');
+    if (ed) return locationForm(locs.find(l => l.id == ed.dataset.edit));
+    const del = e.target.closest('[data-del]');
+    if (del) { const l = locs.find(x => x.id == del.dataset.del);
+      remove('locations', l.id, `Delete ${l.name}? Games using it will show "location to be decided".`, route); }
+  };
+}
+
+/* ----------------------------------------------------------------- Lineup */
+async function viewLineup(gameId){
+  const v = $('#view');
+  const data = await api('GET', {r:'lineup', game_id:gameId});
+  const g = data.game, players = data.players, edit = isStaff();
+  const byId = Object.fromEntries(players.map(p => [p.id, p]));
+
+  // grid[inning][position] = player id; batting[inning] = ordered player ids
+  const grid = {}, batting = {};
+  for (let i = 1; i <= INNINGS; i++) { grid[i] = {}; batting[i] = []; }
+  data.positions.forEach(p => { grid[p.inning][p.position] = p.player_id; });
+  data.batting.forEach(b => { if (batting[b.inning]) batting[b.inning] = b.order.filter(id => byId[id]); });
+  let batInning = 1;     // which inning's batting order is being edited
+  let dirty = false;
+
+  if (!players.length) {
+    v.innerHTML = `<div class="card empty"><h2>No players on this team yet</h2>
+      <p class="muted">Add players before building a lineup.</p>${edit ? '<a class="btn primary" href="#/players">Go to Players</a>' : ''}</div>`;
+    return;
+  }
+
+  const headCells = Array.from({length:INNINGS}, (_, k) => {
+    const i = k + 1;
+    return `<th>Inning ${i}${edit && i > 1 ? `<button class="copy-btn" data-copy="${i}" title="Copy inning ${i-1} into inning ${i}">&larr; copy ${i-1}</button>` : ''}</th>`;
+  }).join('');
+
+  const posRows = POSITIONS.map(([code, name]) => `<tr><th>${code}<small>${name}</small></th>` +
+    Array.from({length:INNINGS}, (_, k) => {
+      const i = k + 1, cur = grid[i][code];
+      if (!edit) return `<td class="ro" data-ro="${i}-${code}">${cur ? esc(label(byId[cur])) : '&mdash;'}</td>`;
+      return `<td><select data-inning="${i}" data-pos="${code}" aria-label="${name}, inning ${i}">
+        <option value="">&mdash;</option>${players.map(p => `<option value="${p.id}">${esc(label(p))}</option>`).join('')}</select></td>`;
+    }).join('') + '</tr>').join('');
+
+  v.innerHTML = `
+    <div class="page-head"><div>
+      <p><a href="#/schedule">&larr; Back to schedule</a></p>
+      <h1>${g.home_away==='away'?'@':'vs'} ${esc(g.opponent)} ${resultBadge(g)}</h1>
+      <p class="muted">${fmtDay(g.game_datetime)} &middot; ${fmtTime(g.game_datetime)} &middot; ${locLink(g)}${g.youtube_url ? ` &middot; <a href="${esc(g.youtube_url)}" target="_blank" rel="noopener">&#9654; Watch stream</a>` : ''}</p>
+    </div></div>
+
+    <h2>Fielding positions</h2>
+    <p class="muted" style="margin-bottom:10px">Nine players take the field each inning. Everyone else sits on the bench for that inning.</p>
+    <div class="grid-wrap"><table class="lineup">
+      <thead><tr><th>Position</th>${headCells}</tr></thead>
+      <tbody>${posRows}
+        <tr class="bench"><th>Bench</th>${Array.from({length:INNINGS}, (_, k) => `<td data-bench="${k+1}"></td>`).join('')}</tr>
+        <tr class="count"><th>Filled</th>${Array.from({length:INNINGS}, (_, k) => `<td data-count="${k+1}"></td>`).join('')}</tr>
+      </tbody></table></div>
+    ${edit ? '<div class="bar"><button class="btn sm" data-act="fill">Copy inning 1 to every inning</button><button class="btn sm danger-o" data-act="clear-field">Clear fielding</button></div>' : ''}
+
+    <h2 style="margin-top:26px">Batting order</h2>
+    <p class="muted" style="margin-bottom:10px">Each inning has its own batting order.</p>
+    <div class="card" id="batting"></div>
+
+    ${edit ? `<div class="savebar"><button class="btn primary" data-act="save">Save lineup</button>
+      <span class="badge now hidden" id="dirty">Unsaved changes</span></div>` : ''}`;
+
+  function markDirty(){ dirty = true; const d = $('#dirty'); if (d) d.classList.remove('hidden'); }
+
+  // Recompute everything derived from `grid` (disabled options, bench, counts).
+  function refreshField(){
+    for (let i = 1; i <= INNINGS; i++) {
+      const used = new Set(Object.values(grid[i]));
+      v.querySelectorAll(`select[data-inning="${i}"]`).forEach(sel => {
+        sel.value = grid[i][sel.dataset.pos] ?? '';
+        [...sel.options].forEach(o => { if (o.value) o.disabled = used.has(Number(o.value)) && Number(o.value) !== grid[i][sel.dataset.pos]; });
+      });
+      const benched = players.filter(p => !used.has(p.id));
+      $(`[data-bench="${i}"]`, v).innerHTML = benched.length ? benched.map(p => esc(short(p))).join('<br>') : '&mdash;';
+      const n = used.size;
+      $(`[data-count="${i}"]`, v).innerHTML = `<span class="${n === 9 ? 'ok' : 'bad'}">${n}/9</span>`;
+    }
+  }
+
+  // Read-only view: one column per inning, one row per batting slot.
+  function battingTable(){
+    const rows = Math.max(0, ...Object.values(batting).map(o => o.length));
+    if (!rows) return '<p class="muted">No batting order set yet.</p>';
+    const cols = Array.from({length:INNINGS}, (_, k) => k + 1);
+    return `<div class="table-wrap"><table class="lineup">
+      <thead><tr><th>Slot</th>${cols.map(i => `<th>Inning ${i}</th>`).join('')}</tr></thead>
+      <tbody>${Array.from({length:rows}, (_, s) => `<tr><th>${s + 1}</th>${cols.map(i =>
+        `<td class="ro">${batting[i][s] ? esc(label(byId[batting[i][s]])) : '&mdash;'}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div>`;
+  }
+
+  function drawBatting(){
+    const el = $('#batting', v);
+    if (!edit) { el.innerHTML = battingTable(); return; }
+    const order = batting[batInning];
+    const rest = players.filter(p => !order.includes(p.id));
+    const tabs = `<div class="inning-tabs" role="tablist">${Array.from({length:INNINGS}, (_, k) => { const i = k + 1;
+      return `<button class="btn sm${i===batInning?' primary':''}" role="tab" aria-selected="${i===batInning}" data-bat-inning="${i}">Inning ${i}<small>(${batting[i].length})</small></button>`; }).join('')}</div>`;
+    el.innerHTML = tabs + (order.length ? `<ol class="order">${order.map((id, idx) => `<li>
+        <span class="slot">${idx + 1}</span><span class="who">${esc(label(byId[id]))}</span>
+        <span class="mv"><button class="btn sm" data-up="${idx}" ${idx===0?'disabled':''} aria-label="Move up">&uarr;</button>
+          <button class="btn sm" data-down="${idx}" ${idx===order.length-1?'disabled':''} aria-label="Move down">&darr;</button>
+          <button class="btn sm danger-o" data-rm="${idx}" aria-label="Remove from order">&times;</button></span></li>`).join('')}</ol>`
+      : `<p class="muted">No batting order set for inning ${batInning} yet.</p>`)
+      + `<div class="bar">${rest.length ? `<select id="addBatter">${rest.map(p => `<option value="${p.id}">${esc(label(p))}</option>`).join('')}</select>
+          <button class="btn sm" data-act="add-batter">Add to order</button>
+          <button class="btn sm" data-act="add-all">Add everyone remaining</button>` : ''}
+          ${batInning > 1 ? `<button class="btn sm" data-act="copy-batting">&larr; Copy inning ${batInning - 1}</button>` : ''}
+          ${order.length ? `<button class="btn sm" data-act="fill-batting">Copy to every inning</button>
+            <button class="btn sm danger-o" data-act="clear-batting">Clear inning ${batInning}</button>` : ''}</div>
+      ${rest.length && order.length ? `<p class="muted" style="margin-top:8px">${rest.length} player${rest.length===1?'':'s'} not in the inning ${batInning} batting order. Most youth leagues bat the whole roster.</p>` : ''}`;
+  }
+
+  refreshField(); drawBatting();
+  if (!edit) return;
+
+  v.onchange = e => {
+    const sel = e.target.closest('select[data-inning]'); if (!sel) return;
+    const i = Number(sel.dataset.inning);
+    if (sel.value) grid[i][sel.dataset.pos] = Number(sel.value); else delete grid[i][sel.dataset.pos];
+    markDirty(); refreshField();
+  };
+
+  v.onclick = async e => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    const d = btn.dataset;
+    if (d.copy) { const i = Number(d.copy); grid[i] = {...grid[i-1]}; markDirty(); refreshField(); return; }
+    if (d.batInning) { batInning = Number(d.batInning); drawBatting(); return; }
+    const order = batting[batInning];
+    if (d.up != null)   { const i = Number(d.up);   [order[i-1], order[i]] = [order[i], order[i-1]]; markDirty(); drawBatting(); return; }
+    if (d.down != null) { const i = Number(d.down); [order[i+1], order[i]] = [order[i], order[i+1]]; markDirty(); drawBatting(); return; }
+    if (d.rm != null)   { order.splice(Number(d.rm), 1); markDirty(); drawBatting(); return; }
+    switch (d.act) {
+      case 'fill': for (let i = 2; i <= INNINGS; i++) grid[i] = {...grid[1]}; markDirty(); refreshField(); break;
+      case 'clear-field': if (confirm('Clear every fielding position for this game?')) { for (let i = 1; i <= INNINGS; i++) grid[i] = {}; markDirty(); refreshField(); } break;
+      case 'add-batter': { const id = Number($('#addBatter', v).value); if (id) { order.push(id); markDirty(); drawBatting(); } break; }
+      case 'add-all': players.forEach(p => { if (!order.includes(p.id)) order.push(p.id); }); markDirty(); drawBatting(); break;
+      case 'copy-batting': batting[batInning] = [...batting[batInning - 1]]; markDirty(); drawBatting(); break;
+      case 'fill-batting':
+        if (confirm(`Replace the batting order in every other inning with inning ${batInning}'s?`)) {
+          for (let i = 1; i <= INNINGS; i++) if (i !== batInning) batting[i] = [...order];
+          markDirty(); drawBatting();
+        }
+        break;
+      case 'clear-batting': batting[batInning] = []; markDirty(); drawBatting(); break;
+      case 'save': {
+        const positions = [];
+        for (let i = 1; i <= INNINGS; i++) for (const [code] of POSITIONS)
+          if (grid[i][code]) positions.push({inning:i, position:code, player_id:grid[i][code]});
+        const battingOut = [];
+        for (let i = 1; i <= INNINGS; i++) if (batting[i].length) battingOut.push({inning:i, order:batting[i]});
+        btn.disabled = true;
+        try {
+          await api('PUT', {r:'lineup', game_id:gameId}, {positions, batting:battingOut});
+          dirty = false; $('#dirty').classList.add('hidden'); toast('Lineup saved');
+        } catch(ex){ toast(ex.message, true); }
+        finally { btn.disabled = false; }
+        break;
+      }
+    }
+  };
+  window.onbeforeunload = null;
+}
+
+/* ---------------------------------------------------------------------- boot */
+window.addEventListener('hashchange', () => { renderChrome(); route(); });
+(async function boot(){
+  if (state.role) {
+    try { await loadSeasons(); } catch(ex) { toast(ex.message, true); }
+  }
+  renderChrome();
+  route();
+})();
+</script>
+</body>
+</html>
